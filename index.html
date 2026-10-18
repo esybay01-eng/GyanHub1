@@ -529,7 +529,7 @@ async function doLogin(){
  if(useSB()){
   try{const r=await fetch(CONFIG.SUPABASE_URL+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:CONFIG.SUPABASE_ANON_KEY,"Content-Type":"application/json"},body:JSON.stringify({email:$("aEmail").value.trim(),password:p})});
    const d=await r.json();if(!r.ok||!d.access_token)return notify("Wrong email/password");sbToken=d.access_token;isAdmin=true;LOCAL_ADMIN=true;try{localStorage.setItem("gh_admin","1")}catch(e){}await adminLoadSB();renderAdmin();
-  }catch(e){notify("Login problem")}
+  }catch(e){notify("Login error: "+(e.message||String(e)))}
  }else if(p===CONFIG.DEMO_ADMIN_PASSWORD){isAdmin=true;LOCAL_ADMIN=true;try{localStorage.setItem("gh_admin","1")}catch(e){}renderAdmin()}else notify("Wrong password");
 }
 function setTab(t){tab=t;editId=null;renderAdmin()}
