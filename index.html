@@ -521,9 +521,6 @@ async function lookupDl(){
 function openAdmin(){isAdmin?renderAdmin():adminLogin()}
 if(location.hash==="#admin")setTimeout(openAdmin,200);
 addEventListener("hashchange",()=>{if(location.hash==="#admin")openAdmin()});
-function adminLogin(){
- 
-function adminLogin(){
  showModal("Admin Login",`${useSB()?'<div class="field"><label>Email</label><input id="aEmail" type="email" placeholder="Enter your email"></div>':""}<div class="field"><label>Password</label><input id="aPass" type="password" placeholder="Enter password"></div><button class="btn red" style="width:100%" onclick="doLogin()">Login</button>${useSB()?'<p style="text-align:center;margin-top:14px"><a href="#" onclick="event.preventDefault();forgotAdminPassword()" style="color:#b45309;font-weight:600">Forgot Password?</a></p>':""}${useSB()?"":'<div class="notice">Demo mode: add Supabase Auth for real security. This password is visible in the browser code.</div>'}`);
 }
 
