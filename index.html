@@ -522,7 +522,40 @@ function openAdmin(){isAdmin?renderAdmin():adminLogin()}
 if(location.hash==="#admin")setTimeout(openAdmin,200);
 addEventListener("hashchange",()=>{if(location.hash==="#admin")openAdmin()});
 function adminLogin(){
- showModal("Admin Login",`${useSB()?'<div class="field"><label>Email</label><input id="aEmail" type="email"></div>':""}<div class="field"><label>Password</label><input id="aPass" type="password"></div><button class="btn red" style="width:100%" onclick="doLogin()">Login</button>${useSB()?"":'<div class="notice">Demo mode: add Supabase Auth for real security. This password is visible in the browser code.</div>'}`);
+ 
+function adminLogin(){
+ showModal("Admin Login",`${useSB()?'<div class="field"><label>Email</label><input id="aEmail" type="email" placeholder="Enter your email"></div>':""}<div class="field"><label>Password</label><input id="aPass" type="password" placeholder="Enter password"></div><button class="btn red" style="width:100%" onclick="doLogin()">Login</button>${useSB()?'<p style="text-align:center;margin-top:14px"><a href="#" onclick="event.preventDefault();forgotAdminPassword()" style="color:#b45309;font-weight:600">Forgot Password?</a></p>':""}${useSB()?"":'<div class="notice">Demo mode: add Supabase Auth for real security. This password is visible in the browser code.</div>'}`);
+}
+
+async function forgotAdminPassword(){
+ const email=$("aEmail")?.value.trim();
+ if(!email){
+   notify("Please enter your email first");
+   $("aEmail")?.focus();
+   return;
+ }
+ try{
+   const r=await fetch(CONFIG.SUPABASE_URL+"/auth/v1/recover",{
+     method:"POST",
+     headers:{
+       apikey:CONFIG.SUPABASE_ANON_KEY,
+       "Content-Type":"application/json"
+     },
+     body:JSON.stringify({
+       email:email,
+       redirect_to:location.origin+location.pathname+"#reset-password"
+     })
+   });
+   if(!r.ok){
+     const d=await r.json().catch(()=>({}));
+     throw new Error(d.msg||d.message||d.error_description||"Reset email could not be sent");
+   }
+   notify("Password reset email sent. Check your inbox.");
+ }catch(e){
+   notify("Reset error: "+e.message);
+ }
+  }
+  
 }
 async function doLogin(){
  const p=$("aPass").value;
