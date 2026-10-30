@@ -204,9 +204,9 @@ function buy(name,price){addToCart(name,price);showCart();}
 function showCart(){updateCartCount();if(!cartItems.length){showModal('<h2>🛒 आपका Cart</h2><p>आपका Cart अभी खाली है। अपनी पसंद की eBook चुनें।</p><button class="buy" onclick="closeModal();document.querySelector(\'#ebooks\').scrollIntoView({behavior:\'smooth\'})">eBooks देखें</button>');return;}const total=cartItems.reduce((sum,item)=>sum+item.price*item.qty,0);const rows=cartItems.map((item,i)=>'<div style="padding:12px 0;border-bottom:1px solid #f0d9b9"><b>'+escapeHtml(item.name)+'</b><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px"><span>₹'+item.price+' × '+item.qty+' = <b>₹'+(item.price*item.qty)+'</b></span><span><button class="pill" onclick="changeQty('+i+',-1)">−</button> <button class="pill" onclick="changeQty('+i+',1)">+</button> <button class="pill" onclick="removeCartItem('+i+')">🗑️</button></span></div></div>').join('');showModal('<h2>🛒 आपका Cart ('+cart+')</h2>'+rows+'<h3 style="text-align:right">कुल: <span style="color:#e92317">₹'+total+'</span></h3><p style="font-size:13px">यह demo checkout है। असली भुगतान के लिए payment gateway जोड़ना होगा।</p><button class="buy" onclick="checkoutDemo()">Checkout — ₹'+total+'</button>');}
 function changeQty(i,d){if(!cartItems[i])return;cartItems[i].qty+=d;if(cartItems[i].qty<=0)cartItems.splice(i,1);updateCartCount();showCart();}
 function removeCartItem(i){cartItems.splice(i,1);updateCartCount();showCart();}
-const RAZORPAY_KEY_ID = ''; // Razorpay Dashboard का public Key ID यहाँ डालें
-const RAZORPAY_CREATE_ORDER_URL = ''; // सुरक्षित backend endpoint जो Razorpay order_id बनाए
-const RAZORPAY_VERIFY_PAYMENT_URL = ''; // backend endpoint जो signature verify करके order सेव करे
+const RAZORPAY_KEY_ID = 'rzp_test_Ttj67G1hGzFRCH'; // Razorpay Test Mode public Key ID
+const RAZORPAY_CREATE_ORDER_URL = 'https://ychpfbhyyexezspwwmco.supabase.co/functions/v1/razorpay-create-order'; // Supabase Edge Function
+const RAZORPAY_VERIFY_PAYMENT_URL = 'https://ychpfbhyyexezspwwmco.supabase.co/functions/v1/razorpay-verify-payment'; // Supabase Edge Function
 function checkoutDemo(){
  if(!cartItems.length){showCart();return;}
  const total=cartItems.reduce((sum,item)=>sum+item.price*item.qty,0);
