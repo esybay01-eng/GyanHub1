@@ -220,6 +220,7 @@ body{background-color:#fff0e7;background-image:none!important;background-attachm
 </section>
 <section class="section" id="offers"><div class="secthead"><h2>🎁 GyanHub पर खरीदारी क्यों करें?</h2></div><div class="benefits"><div class="benefit"><i>⚡</i><div><b>तुरंत डिजिटल डिलीवरी</b><span>भुगतान सफल होने के बाद डाउनलोड लिंक उपलब्ध कराया जा सकता है।</span></div></div><div class="benefit"><i>🔒</i><div><b>सुरक्षित भुगतान</b><span>लाइव पेमेंट गेटवे जोड़ने के बाद सुरक्षित भुगतान स्वीकार करें।</span></div></div><div class="benefit"><i>📱</i><div><b>मोबाइल फ्रेंडली</b><span>मोबाइल, टैबलेट और कंप्यूटर पर आराम से इस्तेमाल करें।</span></div></div></div></section><section class="section" id="help"><div class="secthead"><h2>❓ सहायता चाहिए?</h2></div><div class="benefit"><i>💬</i><div><b>GyanHub सहायता</b><span>यहाँ अपनी सहायता ईमेल और ग्राहक सेवा जानकारी जोड़ें।</span></div></div></section></main>
 <footer class="footer"><div class="wrap footrow"><div><h2 style="color:#ffb13b">GyanHub</h2><p>पढ़ें • सीखें • बढ़ें</p><small>© <span id="year"></span> GyanHub Digital eBook Store</small></div><div><b>Quick Links</b><p><a href="#categories">Categories</a> · <a href="#ebooks">eBooks</a> · <a href="#reviews">Customer Reviews</a></p></div><div><b>Customer Support</b><p>ऑर्डर और डाउनलोड संबंधी सहायता</p></div></div></footer><div class="mobile"><button onclick="scrollTo({top:0,behavior:'smooth'})"><b>⌂</b>Home</button><button onclick="document.querySelector('#categories').scrollIntoView({behavior:'smooth'})"><b>▦</b>Category</button><button onclick="document.querySelector('#ebooks').scrollIntoView({behavior:'smooth'})"><b>▤</b>eBooks</button><button class="mobile-cart" onclick="showCart()"><b class="mobile-cart-icon">🛒</b><span class="mobile-cart-badge" id="bottomCartCount">0</span>Cart</button></div><div class="toast" id="toast"></div><div class="backdrop" id="backdrop" onclick="if(event.target===this)closeModal()"><div class="modal"><button class="close" onclick="closeModal()">✕</button><div id="modalContent"></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 'use strict';
 let cartItems=[]; let cart=0; let slideIndex=0;
@@ -254,6 +255,8 @@ function removeCartItem(i){cartItems.splice(i,1);updateCartCount();showCart();}
 // Supabase legacy anon/public JWT key (NOT service_role, NOT Razorpay secret).
 // Paste the project's legacy anon key here if Edge Functions have JWT verification enabled.
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljaHBmYmh5eWV4ZXpzcHd3bWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5ODUxOTcsImV4cCI6MjEwNzU2MTE5N30.u1pS0nKaIS5G8He7yDgMNJoOCla7EbLr_jDgago80Oo';
+const GY_SUPABASE_URL = 'https://ychpfbhyyexezspwwmco.supabase.co';
+const ghSupabase = window.supabase.createClient(GY_SUPABASE_URL, SUPABASE_ANON_KEY);
 const SUPABASE_HEADERS = {
   'Content-Type': 'application/json',
   'apikey': SUPABASE_ANON_KEY,
@@ -309,7 +312,20 @@ function submitCustomerRegister(){
 function forgotCustomer(){const e=document.getElementById('custEmail').value.trim();toast(e?'Password reset के लिए Supabase Auth जोड़ना बाकी है।':'पहले अपना ईमेल लिखें।');}
 function admin(){showModal('<h2>🔐 Admin Login</h2><label for="adminEmail">Admin Email</label><input type="email" id="adminEmail" placeholder="Admin email"><label for="adminPassword">Password</label><input type="password" id="adminPassword" placeholder="Password"><button class="buy" onclick="toast(\'Admin authentication backend जोड़ना बाकी है\')">Login</button><p style="text-align:right"><a href="#" onclick="event.preventDefault();forgotAdmin()" style="color:#b53b0b;font-weight:bold">Forgot Password?</a></p>');}
 function forgotAdmin(){const e=document.getElementById('adminEmail')?.value.trim()||'';showModal('<h2>🔑 Admin Password Reset</h2><label for="adminResetEmail">Admin Email</label><input type="email" id="adminResetEmail" placeholder="Admin email" value="'+escapeHtml(e)+'"><button class="buy" onclick="requestAdminReset()">Reset Link भेजें</button><p style="font-size:12px">असली reset email भेजने के लिए Supabase Auth सेटअप करना होगा।</p><p><a href="#" onclick="event.preventDefault();admin()">← वापस Admin Login</a></p>');}
-function requestAdminReset(){const e=document.getElementById('adminResetEmail').value.trim();if(!/^\S+@\S+\.\S+$/.test(e)){toast('कृपया सही Admin Email लिखें।');return;}toast('Reset email नहीं भेजा गया: Supabase Auth कनेक्ट करना बाकी है।');}
+async function requestAdminReset(){
+ const e=(document.getElementById('adminResetEmail')?.value||'').trim().toLowerCase();
+ if(!/^\S+@\S+\.\S+$/.test(e)){toast('कृपया सही Admin Email लिखें।');return;}
+ if(e!=='mrsingh90012@gmail.com'){toast('यह ईमेल Admin खाते से मेल नहीं खाता।');return;}
+ const btn=document.querySelector('#modalContent button.buy'); if(btn){btn.disabled=true;btn.textContent='भेजा जा रहा है…';}
+ try{
+  const {error}=await ghSupabase.auth.resetPasswordForEmail(e,{redirectTo:window.location.origin+window.location.pathname});
+  if(error) throw error;
+  showModal('<h2>📩 Reset Email भेज दिया गया</h2><p>आपके Admin ईमेल पर पासवर्ड बदलने का लिंक भेज दिया गया है। Inbox और Spam/Junk फ़ोल्डर देखें।</p><p>ईमेल में आए लिंक को इसी GyanHub वेबसाइट पर खोलें।</p><button class="buy" onclick="closeModal()">ठीक है</button>');
+ }catch(err){console.error('GyanHub password reset:',err);toast('ईमेल नहीं भेजा जा सका: '+(err.message||'कृपया बाद में प्रयास करें।'));if(btn){btn.disabled=false;btn.textContent='Reset Link भेजें';}}
+}
+function ghShowNewPassword(){showModal('<h2>🔐 नया Admin Password</h2><label for="ghNewPass">नया पासवर्ड (कम से कम 8 अक्षर)</label><input id="ghNewPass" type="password" autocomplete="new-password" placeholder="नया पासवर्ड"><label for="ghConfirmPass">पासवर्ड दोबारा लिखें</label><input id="ghConfirmPass" type="password" autocomplete="new-password" placeholder="पासवर्ड दोबारा लिखें"><button class="buy" onclick="ghUpdatePassword()">पासवर्ड सेव करें</button>');}
+async function ghUpdatePassword(){const p=document.getElementById('ghNewPass')?.value||'',c=document.getElementById('ghConfirmPass')?.value||'';if(p.length<8){toast('पासवर्ड कम से कम 8 अक्षर का रखें।');return;}if(p!==c){toast('दोनों पासवर्ड मेल नहीं खाते।');return;}try{const {error}=await ghSupabase.auth.updateUser({password:p});if(error)throw error;showModal('<h2>✅ पासवर्ड बदल गया</h2><p>आपका Admin पासवर्ड सफलतापूर्वक अपडेट हो गया है। अब नए पासवर्ड से लॉगिन करें।</p><button class="buy" onclick="closeModal();admin()">Admin Login</button>');}catch(err){console.error('GyanHub password update:',err);toast('पासवर्ड अपडेट नहीं हुआ: '+(err.message||'लिंक दोबारा खोलें।'));}}
+ghSupabase.auth.onAuthStateChange((event)=>{if(event==='PASSWORD_RECOVERY'){setTimeout(ghShowNewPassword,250);}});
 document.addEventListener('DOMContentLoaded',()=>{document.getElementById('year').textContent=new Date().getFullYear();updateCartCount();
 document.querySelectorAll('.stat strong[data-count]').forEach(el=>{
   const target=Number(el.dataset.count||0), start=Number(el.dataset.start||0), duration=1700;
