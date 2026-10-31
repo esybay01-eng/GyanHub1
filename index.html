@@ -111,6 +111,13 @@ body{background-color:#fff0e7;background-image:none!important;background-attachm
 @media(prefers-reduced-motion:reduce){.mobile-cart-icon,.cart-has-items .cart-top-icon{animation:none!important}.cats-photo .cat-photo,#ebooks .product{transition:none}}
 
 .hd-cover-art{display:block;width:100%;height:100%;object-fit:cover;border-radius:8px;image-rendering:auto}.cover:has(.hd-cover-art){padding:0!important;display:block!important;height:180px!important;position:relative;overflow:hidden}.cover:has(.hd-cover-art) .tag{position:absolute;z-index:2;top:9px;left:9px;box-shadow:0 2px 8px #0003}
+
+/* GyanHub Admin Dashboard */
+.modal:has(.ghad){width:min(980px,100%);max-height:92vh;overflow:auto;padding:16px;background:#fffaf1}
+.modal:has(.ghad) .close{position:sticky;top:0;z-index:5;float:right;background:#ffe9cf}
+.ghad{clear:both;color:#382115}.ghad-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:4px 0 14px;border-bottom:1px solid #efd8b9}.ghad-head h2{margin:0;color:#9e2a14}.ghad-head p{margin:4px 0 0;color:#806650;font-size:12px}.ghad-nav{display:flex;gap:7px;overflow:auto;padding:12px 0}.ghad-nav button{white-space:nowrap;border:1px solid #f0d3ad;background:#fff1db;color:#743015;padding:9px 12px;border-radius:10px;font-weight:bold}.ghad-nav button.active{background:linear-gradient(100deg,#ff9d00,#e92317);color:#fff;border-color:transparent}.ghad-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:8px 0 14px}.ghad-stat{padding:13px;border:1px solid #f1d9b8;border-radius:13px;background:linear-gradient(145deg,#fff,#fff2dc)}.ghad-stat b{display:block;color:#d72c18;font-size:24px}.ghad-stat span{font-size:12px;color:#76573e}.ghad-panel{background:#fff;border:1px solid #f0dec7;border-radius:15px;padding:14px;margin:10px 0}.ghad-panel h3{margin:0 0 12px;color:#8f2d14}.ghad-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ghad-form label{display:block;font-size:12px;font-weight:bold;color:#67452f}.ghad-form input,.ghad-form textarea,.ghad-form select{display:block;width:100%;margin-top:5px;padding:11px;border:1px solid #e7c9a5;border-radius:9px;background:#fff;font:inherit;font-size:14px;color:#2c1b10}.ghad-form textarea{min-height:76px;resize:vertical}.ghad-form .wide{grid-column:1/-1}.ghad-check{display:flex!important;align-items:center;gap:8px}.ghad-check input{width:auto!important;margin:0!important}.ghad-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.ghad-btn{border:0;border-radius:9px;padding:10px 13px;background:linear-gradient(100deg,#ff9400,#e92317);color:#fff;font-weight:bold}.ghad-btn.alt{background:#fff0d8;color:#873015;border:1px solid #f0d3ad}.ghad-btn.danger{background:#a92318}.ghad-tablewrap{overflow:auto;border:1px solid #f0dec7;border-radius:12px;margin-top:12px}.ghad-table{width:100%;border-collapse:collapse;min-width:620px;font-size:12px}.ghad-table th{background:#fff0d6;color:#713016;text-align:left;padding:10px;white-space:nowrap}.ghad-table td{padding:10px;border-top:1px solid #f3e6d5;vertical-align:top}.ghad-muted{color:#806650;font-size:12px}.ghad-empty{text-align:center;padding:24px;color:#806650}.ghad-status{display:inline-block;padding:4px 8px;border-radius:20px;background:#e9f7ec;color:#176b3c;font-size:11px;font-weight:bold}.ghad-status.off{background:#fff0e5;color:#a33a16}.ghad-order-detail{white-space:pre-wrap;overflow-wrap:anywhere;background:#fff7e9;border-radius:9px;padding:10px;font-size:11px;max-width:420px}.ghad-file{font-size:12px;color:#806650;font-weight:normal}.ghad-loading{padding:18px;text-align:center;color:#806650}
+@media(max-width:600px){.modal:has(.ghad){padding:12px;max-height:94vh}.ghad-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.ghad-form{grid-template-columns:1fr}.ghad-form .wide{grid-column:auto}.ghad-panel{padding:11px}.ghad-head h2{font-size:20px}}
+
 </style>
 <style id="gyanhub-final-fixes">
 .gh-scroll-cue{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 2px;padding:10px 13px;border:1px solid #ffd8a0;border-radius:13px;background:linear-gradient(100deg,#fff5df,#fffdf7);color:#873314;font-size:13px;font-weight:800}
@@ -310,7 +317,125 @@ function submitCustomerRegister(){
  toast('फॉर्म सही है। अकाउंट सेव करने के लिए सुरक्षित backend जोड़ना बाकी है।');
 }
 function forgotCustomer(){const e=document.getElementById('custEmail').value.trim();toast(e?'Password reset के लिए Supabase Auth जोड़ना बाकी है।':'पहले अपना ईमेल लिखें।');}
-function admin(){showModal('<h2>🔐 Admin Login</h2><label for="adminEmail">Admin Email</label><input type="email" id="adminEmail" placeholder="Admin email"><label for="adminPassword">Password</label><input type="password" id="adminPassword" placeholder="Password"><button class="buy" onclick="toast(\'Admin authentication backend जोड़ना बाकी है\')">Login</button><p style="text-align:right"><a href="#" onclick="event.preventDefault();forgotAdmin()" style="color:#b53b0b;font-weight:bold">Forgot Password?</a></p>');}
+function admin(){showModal('<h2>🔐 Admin Login</h2><label for="adminEmail">Admin Email</label><input type="email" id="adminEmail" placeholder="Admin email" autocomplete="username"><label for="adminPassword">Password</label><input type="password" id="adminPassword" placeholder="Password" autocomplete="current-password"><button class="buy" id="ghAdminLoginBtn" onclick="ghAdminLogin()">Login</button><p style="text-align:right"><a href="#" onclick="event.preventDefault();forgotAdmin()" style="color:#b53b0b;font-weight:bold">Forgot Password?</a></p>');}
+async function ghAdminLogin(){
+ const email=(document.getElementById('adminEmail')?.value||'').trim().toLowerCase();
+ const password=document.getElementById('adminPassword')?.value||'';
+ if(!/^\S+@\S+\.\S+$/.test(email)){toast('कृपया सही Admin Email लिखें।');return;}
+ if(!password){toast('कृपया पासवर्ड लिखें।');return;}
+ if(email!=='mrsingh90012@gmail.com'){toast('यह Admin Email अधिकृत नहीं है।');return;}
+ const btn=document.getElementById('ghAdminLoginBtn');
+ if(btn){btn.disabled=true;btn.textContent='लॉगिन हो रहा है…';}
+ try{
+  const {data,error}=await ghSupabase.auth.signInWithPassword({email,password});
+  if(error) throw error;
+  const user=data?.user;
+  if(!user || (user.email||'').toLowerCase()!==email){await ghSupabase.auth.signOut();throw new Error('Admin खाते की पुष्टि नहीं हो सकी।');}
+  const {data:profile,error:profileError}=await ghSupabase.from('profiles').select('role,full_name').eq('id',user.id).maybeSingle();
+  if(profileError){await ghSupabase.auth.signOut();throw new Error('Admin अनुमति जाँच नहीं हो सकी: '+profileError.message);}
+  if(!profile || profile.role!=='admin'){
+   await ghSupabase.auth.signOut();
+   throw new Error('इस खाते को Admin अनुमति नहीं मिली है। Supabase profiles में role=admin जाँचें।');
+  }
+  await ghAdminDashboard(profile.full_name||'Admin',user.email||email);
+ }catch(err){
+  console.error('GyanHub admin login:',err);
+  toast('लॉगिन नहीं हुआ: '+(err.message||'कृपया जानकारी जाँचें।'));
+  if(btn){btn.disabled=false;btn.textContent='Login';}
+ }
+}
+
+let ghAdminBooksCache=[];
+let ghAdminCurrentPage='overview';
+let ghAdminEditingId=null;
+function ghAdminShell(name,email,page='overview'){
+ ghAdminCurrentPage=page;
+ const tabs=[['overview','📊 Overview'],['books','📚 eBooks'],['orders','🧾 Orders']];
+ return `<div class="ghad"><div class="ghad-head"><div><h2>🛡️ GyanHub Admin Dashboard</h2><p>स्वागत है ${escapeHtml(name)} · ${escapeHtml(email)}</p></div><button class="ghad-btn danger" onclick="ghAdminLogout()">Logout</button></div><div class="ghad-nav">${tabs.map(([k,label])=>`<button class="${page===k?'active':''}" onclick="ghAdminOpenPage('${k}')">${label}</button>`).join('')}</div><div id="ghAdminBody"><div class="ghad-loading">लोड हो रहा है…</div></div></div>`;
+}
+async function ghAdminDashboard(name,email){
+ showModal(ghAdminShell(name,email,'overview'));
+ await ghAdminOpenPage('overview');
+}
+async function ghAdminOpenPage(page){
+ ghAdminCurrentPage=page;
+ document.querySelectorAll('.ghad-nav button').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick')?.includes("'"+page+"'")));
+ const body=document.getElementById('ghAdminBody');if(!body)return;
+ body.innerHTML='<div class="ghad-loading">डेटा लोड हो रहा है…</div>';
+ if(page==='overview')return ghAdminRenderOverview(body);
+ if(page==='books')return ghAdminRenderBooks(body);
+ if(page==='orders')return ghAdminRenderOrders(body);
+}
+async function ghAdminRenderOverview(body){
+ try{
+  const [books,orders]=await Promise.all([
+   ghSupabase.from('ebooks').select('id,is_active'),
+   ghSupabase.from('orders').select('*')
+  ]);
+  if(books.error)throw books.error;if(orders.error)throw orders.error;
+  const allBooks=books.data||[],allOrders=orders.data||[];
+  const paid=allOrders.filter(o=>String(o.status||o.payment_status||'').toLowerCase()==='paid'||String(o.payment_status||'').toLowerCase()==='paid');
+  const revenue=paid.reduce((n,o)=>n+Number(o.amount??o.total??o.subtotal??0),0);
+  body.innerHTML=`<div class="ghad-stats"><div class="ghad-stat"><b>${allBooks.length}</b><span>कुल eBooks</span></div><div class="ghad-stat"><b>${allBooks.filter(x=>x.is_active!==false).length}</b><span>Active eBooks</span></div><div class="ghad-stat"><b>${allOrders.length}</b><span>कुल Orders</span></div><div class="ghad-stat"><b>${paid.length}</b><span>Paid Orders</span></div><div class="ghad-stat"><b>₹${revenue.toLocaleString('en-IN',{maximumFractionDigits:2})}</b><span>Verified Paid Amount (डेटाबेस के अनुसार)</span></div></div><div class="ghad-panel"><h3>त्वरित काम</h3><div class="ghad-actions"><button class="ghad-btn" onclick="ghAdminOpenPage('books');setTimeout(ghAdminNewBook,100)">＋ नई eBook जोड़ें</button><button class="ghad-btn alt" onclick="ghAdminOpenPage('orders')">ऑर्डर देखें</button></div><p class="ghad-muted">यहाँ दिखाई गई जानकारी Supabase डेटाबेस से आती है।</p></div>`;
+ }catch(e){body.innerHTML=`<div class="ghad-panel"><h3>Dashboard डेटा नहीं मिला</h3><p>${escapeHtml(e.message||String(e))}</p><p class="ghad-muted">Supabase में ebooks/orders टेबल और Admin SELECT policies जाँचें।</p><button class="ghad-btn alt" onclick="ghAdminOpenPage('overview')">फिर प्रयास करें</button></div>`;}
+}
+async function ghAdminRenderBooks(body){
+ try{
+  const {data,error}=await ghSupabase.from('ebooks').select('*').order('created_at',{ascending:false});
+  if(error)throw error;ghAdminBooksCache=data||[];
+  body.innerHTML=`<div class="ghad-panel"><h3>📚 eBook जोड़ें / एडिट करें</h3><form id="ghAdminBookForm" class="ghad-form" onsubmit="event.preventDefault();ghAdminSaveBook()"><label>eBook का नाम<input id="ghBookTitle" required maxlength="160" placeholder="जैसे: योग और स्वास्थ्य"></label><label>कीमत (₹)<input id="ghBookPrice" type="number" min="0" step="0.01" required placeholder="149"></label><label>Category<input id="ghBookCategory" maxlength="80" placeholder="स्वास्थ्य / आध्यात्मिक"></label><label>Cover Image URL <span class="ghad-file">(वैकल्पिक)</span><input id="ghBookCover" type="url" placeholder="https://..."></label><label class="wide">विवरण<textarea id="ghBookDescription" placeholder="किताब के बारे में लिखें"></textarea></label><label class="wide">PDF फाइल <span class="ghad-file">(केवल PDF, अधिकतम 30 MB)</span><input id="ghBookPdf" type="file" accept="application/pdf,.pdf"></label><label class="ghad-check wide"><input id="ghBookActive" type="checkbox" checked> वेबसाइट पर किताब दिखाएँ (Active)</label><div class="ghad-actions wide"><button class="ghad-btn" id="ghBookSaveBtn" type="submit">💾 eBook सेव करें</button><button class="ghad-btn alt" type="button" onclick="ghAdminNewBook()">नया फॉर्म</button></div><p id="ghBookFormNote" class="ghad-muted wide">नया PDF अपलोड करने पर वह private “ebooks” Storage bucket में सुरक्षित रहेगा।</p></form></div><div class="ghad-panel"><h3>आपकी eBooks (${ghAdminBooksCache.length})</h3><div class="ghad-tablewrap"><table class="ghad-table"><thead><tr><th>किताब</th><th>Category</th><th>कीमत</th><th>PDF</th><th>स्थिति</th><th>Action</th></tr></thead><tbody>${ghAdminBooksCache.map((b,i)=>`<tr><td><b>${escapeHtml(b.title||'बिना नाम')}</b><div class="ghad-muted">${escapeHtml(b.slug||'')}</div></td><td>${escapeHtml(b.category||'-')}</td><td>₹${Number(b.price||0).toLocaleString('en-IN')}</td><td>${b.pdf_path?'अपलोड है':'नहीं है'}</td><td><span class="ghad-status ${b.is_active===false?'off':''}">${b.is_active===false?'Inactive':'Active'}</span></td><td><div class="ghad-actions"><button class="ghad-btn alt" onclick="ghAdminEditBook(${i})">Edit</button><button class="ghad-btn danger" onclick="ghAdminDeleteBook(${i})">Delete</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="ghad-empty">अभी कोई eBook नहीं है। ऊपर से पहली eBook जोड़ें।</td></tr>'}</tbody></table></div></div>`;
+  ghAdminNewBook();
+ }catch(e){body.innerHTML=`<div class="ghad-panel"><h3>eBooks लोड नहीं हुईं</h3><p>${escapeHtml(e.message||String(e))}</p><p class="ghad-muted">ebooks टेबल पर Admin SELECT/INSERT/UPDATE/DELETE RLS policies और “ebooks” Storage bucket की policies जाँचें।</p><button class="ghad-btn alt" onclick="ghAdminOpenPage('books')">फिर प्रयास करें</button></div>`;}
+}
+function ghAdminNewBook(){ghAdminEditingId=null;const f=document.getElementById('ghAdminBookForm');if(!f)return;f.reset();document.getElementById('ghBookActive').checked=true;document.getElementById('ghBookSaveBtn').textContent='💾 eBook सेव करें';document.getElementById('ghBookFormNote').textContent='नई PDF अपलोड करने पर वह private “ebooks” Storage bucket में सुरक्षित रहेगी।';}
+function ghAdminEditBook(i){const b=ghAdminBooksCache[i];if(!b)return;ghAdminEditingId=b.id;document.getElementById('ghBookTitle').value=b.title||'';document.getElementById('ghBookPrice').value=b.price??'';document.getElementById('ghBookCategory').value=b.category||'';document.getElementById('ghBookCover').value=b.cover_url||'';document.getElementById('ghBookDescription').value=b.description||'';document.getElementById('ghBookActive').checked=b.is_active!==false;document.getElementById('ghBookPdf').value='';document.getElementById('ghBookSaveBtn').textContent='✏️ बदलाव सेव करें';document.getElementById('ghBookFormNote').textContent='पुरानी PDF बनी रहेगी। नई PDF चुनेंगे तो पुरानी फाइल बदल जाएगी।';document.getElementById('ghAdminBookForm').scrollIntoView({behavior:'smooth',block:'start'});}
+function ghSlug(s){return String(s||'ebook').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,70)||'ebook';}
+async function ghAdminSaveBook(){
+ const title=(document.getElementById('ghBookTitle')?.value||'').trim(),price=Number(document.getElementById('ghBookPrice')?.value),category=(document.getElementById('ghBookCategory')?.value||'').trim(),cover=(document.getElementById('ghBookCover')?.value||'').trim(),description=(document.getElementById('ghBookDescription')?.value||'').trim(),active=!!document.getElementById('ghBookActive')?.checked,file=document.getElementById('ghBookPdf')?.files?.[0];
+ if(!title||!Number.isFinite(price)||price<0){toast('किताब का नाम और सही कीमत भरें।');return;}
+ if(file&&(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))){toast('कृपया केवल PDF फाइल चुनें।');return;}
+ if(file&&file.size>30*1024*1024){toast('PDF 30 MB से छोटी रखें।');return;}
+ const btn=document.getElementById('ghBookSaveBtn');if(btn){btn.disabled=true;btn.textContent='सेव हो रहा है…';}
+ let uploadedPath=null;
+ try{
+  const old=ghAdminBooksCache.find(x=>x.id===ghAdminEditingId);
+  let pdfPath=old?.pdf_path||null;
+  if(file){const safe=ghSlug(title),unique=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now());uploadedPath=`admin/${safe}-${unique}.pdf`;const up=await ghSupabase.storage.from('ebooks').upload(uploadedPath,file,{contentType:'application/pdf',upsert:false,cacheControl:'3600'});if(up.error)throw up.error;pdfPath=uploadedPath;}
+  if(!pdfPath)throw new Error('इस eBook की PDF चुनकर अपलोड करें।');
+  const payload={title,slug:ghSlug(title),description,category:category||'अन्य',cover_url:cover||null,pdf_path:pdfPath,price,is_active:active};
+  let result;
+  if(ghAdminEditingId)result=await ghSupabase.from('ebooks').update(payload).eq('id',ghAdminEditingId).select().single();
+  else result=await ghSupabase.from('ebooks').insert(payload).select().single();
+  if(result.error)throw result.error;
+  if(file&&old?.pdf_path&&old.pdf_path!==pdfPath){const rm=await ghSupabase.storage.from('ebooks').remove([old.pdf_path]);if(rm.error)console.warn('Old PDF cleanup:',rm.error.message);}
+  toast(ghAdminEditingId?'eBook अपडेट हो गई।':'नई eBook सेव हो गई।');
+  await ghAdminRenderBooks(document.getElementById('ghAdminBody'));
+  ghLoadPublicEbooks();
+ }catch(e){if(uploadedPath){const rm=await ghSupabase.storage.from('ebooks').remove([uploadedPath]);if(rm.error)console.warn(rm.error);}toast('सेव नहीं हुआ: '+(e.message||String(e)));if(btn){btn.disabled=false;btn.textContent=ghAdminEditingId?'✏️ बदलाव सेव करें':'💾 eBook सेव करें';}}
+}
+async function ghAdminDeleteBook(i){const b=ghAdminBooksCache[i];if(!b||!confirm('क्या “'+b.title+'” को हटाना चाहते हैं?'))return;try{const {error}=await ghSupabase.from('ebooks').delete().eq('id',b.id);if(error)throw error;if(b.pdf_path){const rm=await ghSupabase.storage.from('ebooks').remove([b.pdf_path]);if(rm.error)console.warn('PDF हटाने में समस्या:',rm.error.message);}toast('eBook हटा दी गई।');await ghAdminRenderBooks(document.getElementById('ghAdminBody'));ghLoadPublicEbooks();}catch(e){toast('Delete नहीं हुआ: '+(e.message||String(e)));}}
+function ghOrderField(o,keys){for(const k of keys){if(o[k]!==undefined&&o[k]!==null&&o[k]!=='')return o[k];}return '';}
+async function ghAdminRenderOrders(body){
+ try{
+  const {data,error}=await ghSupabase.from('orders').select('*').order('created_at',{ascending:false}).limit(200);if(error)throw error;
+  const rows=data||[];
+  body.innerHTML=`<div class="ghad-panel"><h3>🧾 ग्राहक ऑर्डर (${rows.length})</h3><p class="ghad-muted">नवीनतम 200 ऑर्डर दिखाए जा रहे हैं। रकम और स्टेटस डेटाबेस में सेव रिकॉर्ड के अनुसार हैं।</p><div class="ghad-tablewrap"><table class="ghad-table"><thead><tr><th>Order ID</th><th>ग्राहक</th><th>रकम</th><th>Payment Status</th><th>Order Status</th><th>तारीख</th><th>विवरण</th></tr></thead><tbody>${rows.map((o,i)=>{const cust=ghOrderField(o,['customer_name','name','full_name'])||ghOrderField(o,['customer_email','email'])||'ग्राहक';const amount=ghOrderField(o,['amount','total','subtotal']);const pay=ghOrderField(o,['payment_status','status'])||'अज्ञात';const status=ghOrderField(o,['order_status','fulfillment_status','status'])||'—';const dt=o.created_at?new Date(o.created_at).toLocaleString('en-IN'):'—';return `<tr><td><b>${escapeHtml(String(ghOrderField(o,['order_number','id'])||'—').slice(0,18))}</b></td><td>${escapeHtml(cust)}<div class="ghad-muted">${escapeHtml(ghOrderField(o,['customer_email','email'])||'')}</div><div class="ghad-muted">${escapeHtml(ghOrderField(o,['customer_phone','phone'])||'')}</div></td><td>${amount!==''?'₹'+Number(amount).toLocaleString('en-IN',{maximumFractionDigits:2}):'—'}</td><td><span class="ghad-status ${String(pay).toLowerCase()!=='paid'?'off':''}">${escapeHtml(pay)}</span></td><td>${escapeHtml(status)}</td><td>${escapeHtml(dt)}</td><td><details><summary>देखें</summary><pre class="ghad-order-detail">${escapeHtml(JSON.stringify(o,null,2))}</pre></details></td></tr>`;}).join('')||'<tr><td colspan="7" class="ghad-empty">अभी कोई ऑर्डर नहीं है।</td></tr>'}</tbody></table></div></div>`;
+ }catch(e){body.innerHTML=`<div class="ghad-panel"><h3>ऑर्डर लोड नहीं हुए</h3><p>${escapeHtml(e.message||String(e))}</p><p class="ghad-muted">orders टेबल पर Admin SELECT policy जाँचें।</p><button class="ghad-btn alt" onclick="ghAdminOpenPage('orders')">फिर प्रयास करें</button></div>`;}
+}
+async function ghLoadPublicEbooks(){
+ const host=document.getElementById('products');if(!host)return;
+ const old=document.getElementById('ghDynamicBooks');if(old)old.remove();
+ try{const {data,error}=await ghSupabase.from('ebooks').select('id,title,description,category,cover_url,price,is_active').eq('is_active',true).order('created_at',{ascending:false});if(error)throw error;
+  if(!data?.length)return;
+  const wrap=document.createElement('div');wrap.id='ghDynamicBooks';wrap.style.display='contents';
+  data.forEach(book=>{const card=document.createElement('article');card.className='product';card.dataset.search=(book.title+' '+(book.category||'')+' '+(book.description||'')).toLowerCase();card.dataset.language='Hindi';const cover=document.createElement('div');cover.className='cover';if(book.cover_url){const img=document.createElement('img');img.src=book.cover_url;img.alt=book.title;img.loading='lazy';img.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0';cover.appendChild(img);}else{const emoji=document.createElement('span');emoji.className='emoji';emoji.textContent='📘';cover.appendChild(emoji);const label=document.createElement('b');label.textContent=book.title;cover.appendChild(label);}const h=document.createElement('h3');h.textContent=book.title;const cat=document.createElement('div');cat.className='rating';cat.textContent=book.category||'eBook';const price=document.createElement('div');price.className='price';const amount=document.createElement('strong');amount.textContent='₹'+Number(book.price||0).toLocaleString('en-IN');price.appendChild(amount);const actions=document.createElement('div');actions.className='product-actions';const add=document.createElement('button');add.className='addcart';add.textContent='🛒 Add to Cart';add.addEventListener('click',()=>addToCart(book.title,Number(book.price||0)));const buyBtn=document.createElement('button');buyBtn.className='buy';buyBtn.textContent='Buy Now';buyBtn.addEventListener('click',()=>buy(book.title,Number(book.price||0)));actions.append(add,buyBtn);card.append(cover,h,cat,price,actions);wrap.appendChild(card);});host.appendChild(wrap);
+ }catch(e){console.warn('Public eBook catalog:',e.message||e);}
+}
+
+async function ghAdminLogout(){
+ try{const {error}=await ghSupabase.auth.signOut();if(error)throw error;closeModal();toast('Admin Logout हो गया।');}
+ catch(err){toast('Logout नहीं हुआ: '+(err.message||'फिर प्रयास करें।'));}
+}
 function forgotAdmin(){const e=document.getElementById('adminEmail')?.value.trim()||'';showModal('<h2>🔑 Admin Password Reset</h2><label for="adminResetEmail">Admin Email</label><input type="email" id="adminResetEmail" placeholder="Admin email" value="'+escapeHtml(e)+'"><button class="buy" onclick="requestAdminReset()">Reset Link भेजें</button><p style="font-size:12px">असली reset email भेजने के लिए Supabase Auth सेटअप करना होगा।</p><p><a href="#" onclick="event.preventDefault();admin()">← वापस Admin Login</a></p>');}
 async function requestAdminReset(){
  const e=(document.getElementById('adminResetEmail')?.value||'').trim().toLowerCase();
@@ -341,5 +466,5 @@ document.querySelectorAll('.stat strong[data-count]').forEach(el=>{
   requestAnimationFrame(countFrame);
 });
 const newsletterForm=document.getElementById('newsletterForm');if(newsletterForm){newsletterForm.addEventListener('submit',e=>{e.preventDefault();const email=document.getElementById('newsletterEmail').value.trim();if(email)toast('धन्यवाद! ईमेल सूची सेव करने के लिए लाइव backend जोड़ना बाकी है।');});}
-document.getElementById('searchForm').addEventListener('submit',e=>{e.preventDefault();const q=document.getElementById('searchInput').value.trim().toLowerCase();let n=0;document.querySelectorAll('.product').forEach(p=>{const ok=!q||p.dataset.search.toLowerCase().includes(q)||p.innerText.toLowerCase().includes(q);p.style.display=ok?'flex':'none';if(ok)n++;});document.querySelector('#ebooks').scrollIntoView({behavior:'smooth'});toast(n?n+' किताबें मिलीं':'इस खोज से कोई किताब नहीं मिली');});ghInitCarousel();});
+document.getElementById('searchForm').addEventListener('submit',e=>{e.preventDefault();const q=document.getElementById('searchInput').value.trim().toLowerCase();let n=0;document.querySelectorAll('.product').forEach(p=>{const ok=!q||p.dataset.search.toLowerCase().includes(q)||p.innerText.toLowerCase().includes(q);p.style.display=ok?'flex':'none';if(ok)n++;});document.querySelector('#ebooks').scrollIntoView({behavior:'smooth'});toast(n?n+' किताबें मिलीं':'इस खोज से कोई किताब नहीं मिली');});ghInitCarousel();ghLoadPublicEbooks();});
 </script></body></html>
