@@ -1,5 +1,6 @@
 
-const CACHE_NAME = "gyanhub-v1";
+const CACHE_NAME = "gyanhub-v2";
+
 const APP_FILES = [
   "/GyanHub1/",
   "/GyanHub1/index.html",
@@ -14,7 +15,14 @@ self.addEventListener("install", event => {
 });
 
 self.addEventListener("activate", event => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      )
+    ).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener("fetch", event => {
@@ -23,8 +31,6 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      return cached || fetch(event.request);
-    })
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
