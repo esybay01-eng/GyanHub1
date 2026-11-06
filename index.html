@@ -174,6 +174,16 @@ body{background-color:#fff0e7;background-image:none!important;background-attachm
 .cover:has(.hd-cover-art) .tag{z-index:3!important}
 @media(max-width:600px){.cover:has(.hd-cover-art){height:180px!important}}
 </style>
+
+<style id="gyanhub-mobile-title-fix">
+/* Mobile: keep full eBook names visible and prevent floating chat button overlap */
+@media (max-width: 700px) {
+  #ebooks .products, .products { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; align-items: stretch; }
+  .product { min-width: 0; height: auto !important; overflow: visible !important; }
+  .product h3 { display: block !important; height: auto !important; min-height: 0 !important; max-height: none !important; overflow: visible !important; white-space: normal !important; overflow-wrap: anywhere !important; word-break: normal !important; line-height: 1.5 !important; font-size: 14px !important; margin: 12px 0 8px !important; }
+  #ghChatFab { right: 12px !important; bottom: 155px !important; width: 52px !important; height: 52px !important; }
+}
+</style>
 </head><body>
 <div class="top">📚 Learn something new every day • GyanHub Digital Library</div><header class="header"><div class="wrap"><div class="headrow"><a class="brand" href="#home"><span class="logo">📖</span><span><b>GyanHub</b><small>Digital eBook Store</small></span></a><form class="search" id="searchForm"><input aria-label="Search books" id="searchInput" placeholder="किताबें खोजें, जैसे – स्वास्थ्य, बच्चों की परवरिश..."/><button>🔍 Search</button></form><div class="actions"><button class="pill" onclick="account('login')">♙ Login</button><button class="pill" onclick="account('register')">Register</button><button class="pill" onclick="toast('Wishlist अभी खाली है ❤️')">♡</button><button class="pill cart-top" onclick="showCart()"><span aria-hidden="true" class="cart-top-icon">🛒</span> <span id="cartCount">0</span></button><button class="pill red" onclick="admin()">Admin</button></div></div><nav class="nav"><a href="#home">⌂ Home</a><a href="#categories">▦ Categories</a><a href="#ebooks">▣ eBooks</a><a href="#offers">％ Offers</a><a href="#orders" onclick="toast('Order history के लिए customer login/backend जोड़ना होगा')">▤ My Orders</a><a href="#help">ⓘ Help</a></nav></div></header>
 <main class="wrap" id="home"><section aria-label="GyanHub promotional banners" class="gh-carousel" id="gyanhubHero" onclick="if(event.target.closest('[data-cta]'))document.querySelector('#ebooks').scrollIntoView({behavior:'smooth'})">
@@ -410,8 +420,7 @@ async function ghAdminSaveBook(){
   if(coverFile){const safe=ghSlug(title),unique=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now());uploadedCoverPath=`admin/covers/${safe}-${unique}.${coverFile.type.split('/')[1].replace('jpeg','jpg')}`;const upc=await ghSupabase.storage.from('ebooks').upload(uploadedCoverPath,coverFile,{contentType:coverFile.type,upsert:false,cacheControl:'3600'});if(upc.error)throw upc.error;coverValue='storage://'+uploadedCoverPath;}
   else if(removeCover)coverValue=null;else if(cover)coverValue=cover;
   if(!pdfPath)throw new Error('इस eBook की PDF चुनकर अपलोड करें।');
-  const newUniqueSlug=ghSlug(title)+'-'+((window.crypto&&crypto.randomUUID)?crypto.randomUUID().slice(0,8):String(Date.now()).slice(-8));
-  const payload={title,slug:old?.slug||newUniqueSlug,description,category:category||'अन्य',cover_url:coverValue,pdf_path:pdfPath,price,is_active:active};
+  const payload={title,slug:ghSlug(title),description,category:category||'अन्य',cover_url:coverValue,pdf_path:pdfPath,price,is_active:active};
   let result;
   if(ghAdminEditingId)result=await ghSupabase.from('ebooks').update(payload).eq('id',ghAdminEditingId).select().single();
   else result=await ghSupabase.from('ebooks').insert(payload).select().single();
@@ -503,14 +512,26 @@ async function ghSaveDemoPdf(i){
  const btn=status?.previousElementSibling; if(btn){btn.disabled=true;btn.textContent='अपलोड हो रहा है…';}
  let uploadedPath=null;
  try{
-  const {data:existing,error:findError}=await ghSupabase.from('ebooks').select('*').eq('title',title).limit(1).maybeSingle();
+  const {data:matches,error:findError}=await ghSupabase.from('ebooks').select('*').eq('title',title).order('created_at',{ascending:false}).limit(1);
   if(findError)throw findError;
+  const existing=(matches||[])[0]||null;
   const unique=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now());
   uploadedPath=`admin/${ghSlug(title)}-${unique}.pdf`;
   const up=await ghSupabase.storage.from('ebooks').upload(uploadedPath,file,{contentType:'application/pdf',upsert:false,cacheControl:'3600'});
   if(up.error)throw up.error;
-  const uniqueSlug=ghSlug(title)+'-'+unique.slice(0,8);
-  const payload={title,slug:existing?.slug||uniqueSlug,description:existing?.description||'GyanHub demo eBook',category:existing?.category||'अन्य',cover_url:existing?.cover_url||null,pdf_path:uploadedPath,price,is_active:true};
+  // When replacing an existing row, preserve its unique slug. For a genuinely new row,
+  // probe the table and generate a unique slug rather than colliding with another book.
+  let safeSlug=existing?.slug||ghSlug(title);
+  if(!existing){
+   const base=safeSlug; let n=2;
+   while(true){
+    const {data:used,error:slugCheckError}=await ghSupabase.from('ebooks').select('id').eq('slug',safeSlug).limit(1);
+    if(slugCheckError)throw slugCheckError;
+    if(!used||used.length===0)break;
+    safeSlug=`${base}-${n++}`;
+   }
+  }
+  const payload={title,slug:safeSlug,description:existing?.description||'GyanHub demo eBook',category:existing?.category||'अन्य',cover_url:existing?.cover_url||null,pdf_path:uploadedPath,price,is_active:existing?.is_active??true};
   const result=existing?await ghSupabase.from('ebooks').update(payload).eq('id',existing.id).select().single():await ghSupabase.from('ebooks').insert(payload).select().single();
   if(result.error)throw result.error;
   if(existing?.pdf_path&&existing.pdf_path!==uploadedPath){const rm=await ghSupabase.storage.from('ebooks').remove([existing.pdf_path]);if(rm.error)console.warn('पुरानी PDF cleanup:',rm.error.message);}
