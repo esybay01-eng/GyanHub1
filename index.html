@@ -420,7 +420,18 @@ async function ghAdminSaveBook(){
   if(coverFile){const safe=ghSlug(title),unique=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now());uploadedCoverPath=`admin/covers/${safe}-${unique}.${coverFile.type.split('/')[1].replace('jpeg','jpg')}`;const upc=await ghSupabase.storage.from('ebooks').upload(uploadedCoverPath,coverFile,{contentType:coverFile.type,upsert:false,cacheControl:'3600'});if(upc.error)throw upc.error;coverValue='storage://'+uploadedCoverPath;}
   else if(removeCover)coverValue=null;else if(cover)coverValue=cover;
   if(!pdfPath)throw new Error('इस eBook की PDF चुनकर अपलोड करें।');
-  const payload={title,slug:ghSlug(title),description,category:category||'अन्य',cover_url:coverValue,pdf_path:pdfPath,price,is_active:active};
+  // Existing books keep their slug; new books get a unique slug to avoid ebooks_slug_key conflicts.
+  let safeSlug=old?.slug||ghSlug(title);
+  if(!old){
+   const base=safeSlug;let suffix=2;
+   while(true){
+    const check=await ghSupabase.from('ebooks').select('id').eq('slug',safeSlug).limit(1);
+    if(check.error)throw check.error;
+    if(!check.data||check.data.length===0)break;
+    safeSlug=base+'-'+suffix++;
+   }
+  }
+  const payload={title,slug:safeSlug,description,category:category||'अन्य',cover_url:coverValue,pdf_path:pdfPath,price,is_active:active};
   let result;
   if(ghAdminEditingId)result=await ghSupabase.from('ebooks').update(payload).eq('id',ghAdminEditingId).select().single();
   else result=await ghSupabase.from('ebooks').insert(payload).select().single();
@@ -430,7 +441,7 @@ async function ghAdminSaveBook(){
   toast(ghAdminEditingId?'eBook अपडेट हो गई।':'नई eBook सेव हो गई।');
   await ghAdminRenderBooks(document.getElementById('ghAdminBody'));
   ghLoadPublicEbooks();
- }catch(e){const cleanup=[];if(uploadedPath)cleanup.push(uploadedPath);if(uploadedCoverPath)cleanup.push(uploadedCoverPath);if(cleanup.length){const rm=await ghSupabase.storage.from('ebooks').remove(cleanup);if(rm.error)console.warn(rm.error);}toast('सेव नहीं हुआ: '+(e.message||String(e)));if(btn){btn.disabled=false;btn.textContent=ghAdminEditingId?'✏️ बदलाव सेव करें':'💾 eBook सेव करें';}}
+ }catch(e){const cleanup=[];if(uploadedPath)cleanup.push(uploadedPath);if(uploadedCoverPath)cleanup.push(uploadedCoverPath);if(cleanup.length){const rm=await ghSupabase.storage.from('ebooks').remove(cleanup);if(rm.error)console.warn(rm.error);}const msg=(e&&e.message==='Failed to fetch')?'Supabase से कनेक्शन नहीं हो पाया। इंटरनेट, Supabase project status और Storage/ebooks तथा ebooks table की RLS policies जाँचें।':(e.message||String(e));toast('सेव नहीं हुआ: '+msg);if(btn){btn.disabled=false;btn.textContent=ghAdminEditingId?'✏️ बदलाव सेव करें':'💾 eBook सेव करें';}}
 }
 async function ghAdminDeleteBook(i){const b=ghAdminBooksCache[i];if(!b||!confirm('क्या “'+b.title+'” को हटाना चाहते हैं?'))return;try{const {error}=await ghSupabase.from('ebooks').delete().eq('id',b.id);if(error)throw error;if(b.pdf_path){const rm=await ghSupabase.storage.from('ebooks').remove([b.pdf_path]);if(rm.error)console.warn('PDF हटाने में समस्या:',rm.error.message);}toast('eBook हटा दी गई।');await ghAdminRenderBooks(document.getElementById('ghAdminBody'));ghLoadPublicEbooks();}catch(e){toast('Delete नहीं हुआ: '+(e.message||String(e)));}}
 function ghOrderField(o,keys){for(const k of keys){if(o[k]!==undefined&&o[k]!==null&&o[k]!=='')return o[k];}return '';}
