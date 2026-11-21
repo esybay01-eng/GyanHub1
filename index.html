@@ -407,6 +407,19 @@ function ghAdminCoverPreviewFile(){const f=document.getElementById('ghBookCoverF
 function ghAdminClearCover(){document.getElementById('ghBookCover').value='';document.getElementById('ghBookCoverFile').value='';document.getElementById('ghBookCoverRemove').checked=true;document.getElementById('ghBookCoverPreviewWrap').style.display='none';document.getElementById('ghBookCoverPreview').removeAttribute('src');}
 function ghAdminEditBook(i){const b=ghAdminBooksCache[i];if(!b)return;ghAdminEditingId=b.id;document.getElementById('ghBookTitle').value=b.title||'';document.getElementById('ghBookPrice').value=b.price??'';document.getElementById('ghBookCategory').value=b.category||'';document.getElementById('ghBookCover').value=(b.cover_url||'').startsWith('storage://')?'':(b.cover_url||'');document.getElementById('ghBookCoverFile').value='';document.getElementById('ghBookCoverRemove').checked=false;document.getElementById('ghBookDescription').value=b.description||'';document.getElementById('ghBookActive').checked=b.is_active!==false;document.getElementById('ghBookPdf').value='';document.getElementById('ghBookPdfCurrent').textContent=b.pdf_path?'📄 मौजूदा PDF अपलोड है: '+String(b.pdf_path).split('/').pop()+' — नई PDF चुनकर बदल सकते हैं।':'⚠️ इस किताब में अभी PDF अपलोड नहीं है।';const prev=document.getElementById('ghBookCoverPreview');if(b.cover_url){prev.src=b.cover_url.startsWith('storage://')?'':b.cover_url;document.getElementById('ghBookCoverPreviewWrap').style.display='flex';}else document.getElementById('ghBookCoverPreviewWrap').style.display='none';document.getElementById('ghBookSaveBtn').textContent='✏️ बदलाव सेव करें';document.getElementById('ghBookFormNote').textContent='PDF एडिट: नई PDF चुनकर बदलाव सेव करें; पुरानी PDF अपने आप बदल जाएगी। PDF खाली छोड़ने पर पुरानी PDF बनी रहेगी। कवर इमेज भी अलग से बदली जा सकती है।';document.getElementById('ghAdminBookForm').scrollIntoView({behavior:'smooth',block:'start'});}
 function ghSlug(s){return String(s||'ebook').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,70)||'ebook';}
+async function ghCoverConvertToJpeg(file){
+ if(!file)return null;
+ const url=URL.createObjectURL(file);
+ try{
+  const img=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('कवर इमेज पढ़ी नहीं जा सकी।'));im.src=url;});
+  const max=1400,scale=Math.min(1,max/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height));
+  const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round((img.naturalWidth||img.width)*scale));canvas.height=Math.max(1,Math.round((img.naturalHeight||img.height)*scale));
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('कवर को JPG में बदलना संभव नहीं हुआ।')),'image/jpeg',0.86));
+  const base=(file.name||'gyanhub-cover').replace(/\.[^.]+$/,'').replace(/[^a-zA-Z0-9_-]+/g,'-')||'gyanhub-cover';
+  return new File([blob],base+'.jpg',{type:'image/jpeg',lastModified:Date.now()});
+ }finally{URL.revokeObjectURL(url);}
+}
 async function ghAdminSaveBook(){
  const title=(document.getElementById('ghBookTitle')?.value||'').trim(),price=Number(document.getElementById('ghBookPrice')?.value),category=(document.getElementById('ghBookCategory')?.value||'').trim(),cover=(document.getElementById('ghBookCover')?.value||'').trim(),coverFile=document.getElementById('ghBookCoverFile')?.files?.[0],removeCover=!!document.getElementById('ghBookCoverRemove')?.checked,description=(document.getElementById('ghBookDescription')?.value||'').trim(),active=!!document.getElementById('ghBookActive')?.checked,file=document.getElementById('ghBookPdf')?.files?.[0];
  if(!title||!Number.isFinite(price)||price<0){toast('किताब का नाम और सही कीमत भरें।');return;}
@@ -419,7 +432,7 @@ async function ghAdminSaveBook(){
   const old=ghAdminBooksCache.find(x=>x.id===ghAdminEditingId);
   let pdfPath=old?.pdf_path||null,coverValue=old?.cover_url||null;
   if(file){const safe=ghSlug(title),unique=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now());uploadedPath=`admin/${safe}-${unique}.pdf`;const up=await ghSupabase.storage.from('ebooks').upload(uploadedPath,file,{contentType:'application/pdf',upsert:false,cacheControl:'3600'});if(up.error)throw up.error;pdfPath=uploadedPath;}
-  if(coverFile){const safe=ghSlug(title),unique=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now());uploadedCoverPath=`admin/covers/${safe}-${unique}.${coverFile.type.split('/')[1].replace('jpeg','jpg')}`;const upc=await ghSupabase.storage.from('ebooks').upload(uploadedCoverPath,coverFile,{contentType:coverFile.type,upsert:false,cacheControl:'3600'});if(upc.error)throw upc.error;coverValue='storage://'+uploadedCoverPath;}
+  if(coverFile){const jpegCover=await ghCoverConvertToJpeg(coverFile);const safe=ghSlug(title),unique=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now());uploadedCoverPath=`admin/covers/${safe}-${unique}.jpg`;const upc=await ghSupabase.storage.from('ebooks').upload(uploadedCoverPath,jpegCover,{contentType:'image/jpeg',upsert:false,cacheControl:'3600'});if(upc.error)throw upc.error;coverValue='storage://'+uploadedCoverPath;}
   else if(removeCover)coverValue=null;else if(cover)coverValue=cover;
   if(!pdfPath)throw new Error('इस eBook की PDF चुनकर अपलोड करें।');
   // Existing books keep their slug; new books get a unique slug to avoid ebooks_slug_key conflicts.
@@ -586,52 +599,55 @@ document.addEventListener('DOMContentLoaded',()=>{ghApplyDemoImageOverrides();co
 </script>
 <script id="gh-share-script">
 const GH_SHARE_BASE="https://esybay01-eng.github.io/GyanHub1/";
-function ghShareEbook(slug){const url=GH_SHARE_BASE+'share-'+encodeURIComponent(slug)+'.html';const title=document.querySelector('[data-share-slug="'+CSS.escape(slug)+'"] h3')?.textContent||'GyanHub eBook';const text=title+' — GyanHub पर ₹149 में पढ़ें। '+url;if(navigator.share){navigator.share({title:title,text:text,url:url}).catch(()=>{});return;}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(()=>alert('eBook का शेयर लिंक कॉपी हो गया। अब WhatsApp या Facebook पर भेजें।')).catch(()=>prompt('इस लिंक को कॉपी करें:',url));}else{prompt('इस लिंक को कॉपी करें:',url);}}
+function ghShareEbook(slug){const url=GH_SHARE_BASE+'?ebook='+encodeURIComponent(slug);const title=document.querySelector('[data-share-slug="'+CSS.escape(slug)+'"] h3')?.textContent||'GyanHub eBook';const text=title+' — GyanHub पर ₹149 में पढ़ें। '+url;if(navigator.share){navigator.share({title:title,text:text,url:url}).catch(()=>{});return;}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(()=>alert('eBook का शेयर लिंक कॉपी हो गया। अब WhatsApp या Facebook पर भेजें।')).catch(()=>prompt('इस लिंक को कॉपी करें:',url));}else{prompt('इस लिंक को कॉपी करें:',url);}}
 (function(){const p=new URLSearchParams(location.search);const slug=p.get('ebook');if(!slug)return;const card=document.querySelector('[data-share-slug="'+CSS.escape(slug)+'"]');if(card){setTimeout(()=>{card.scrollIntoView({behavior:'smooth',block:'center'});card.classList.add('gh-share-focus');},450);}})();
 </script>
 
 <script id="gh-share-pro-system">
 (function(){
- let currentShare={url:'',title:'GyanHub eBook',description:''};
+ let currentShare={url:'',title:'GyanHub eBook',price:'',desc:''};
  function ensureSheet(){
   if(document.getElementById('ghShareSheet'))return;
-  const el=document.createElement('div');el.id='ghShareSheet';el.innerHTML=`<section id="ghShareCard" role="dialog" aria-modal="true" aria-label="eBook शेयर करें"><button id="ghShareClose" type="button" aria-label="बंद करें">×</button><h3>✨ eBook शेयर करें</h3><p id="ghShareDesc">अपनी पसंद की किताब दोस्तों तक पहुँचाएँ।</p><div class="gh-share-options"><button class="gh-share-option gh-share-wa" type="button" data-share="wa">🟢 WhatsApp</button><button class="gh-share-option gh-share-fb" type="button" data-share="fb">🔵 Facebook</button><button class="gh-share-option gh-share-inst" type="button" data-share="inst">📸 Instagram</button><button class="gh-share-option gh-share-copy" type="button" data-share="copy">🔗 लिंक कॉपी करें</button></div><p style="margin:14px 0 0;font-size:11px">Instagram पर लिंक कॉपी करके Bio या Story के Link Sticker में लगाएँ।</p></section>`;
+  const style=document.createElement('style');style.id='ghShareStyle';style.textContent=`#ghShareSheet{display:none;position:fixed;inset:0;z-index:999999;background:rgba(20,12,8,.62);padding:18px;align-items:center;justify-content:center}#ghShareSheet.open{display:flex}#ghShareCard{position:relative;width:min(100%,440px);max-height:88vh;overflow:auto;background:#fffaf2;color:#392719;border:1px solid #e5c99b;border-radius:20px;padding:24px 18px 20px;box-shadow:0 18px 55px #0005;font-family:inherit}#ghShareCard h3{margin:4px 35px 10px 0;color:#8b2c19;font-size:22px}#ghShareCard p{line-height:1.5}#ghShareClose{position:absolute;right:12px;top:10px;border:0;border-radius:50%;width:36px;height:36px;background:#f3e5d0;font-size:25px;color:#553522}#ghShareUrl{width:100%;box-sizing:border-box;padding:12px;border:1px solid #d9c6a7;border-radius:10px;background:#fff;font-size:13px;color:#3c3025;margin:8px 0 12px}#ghShareCopyMain{width:100%;padding:13px;border:0;border-radius:11px;background:#8b241c;color:#fff;font-weight:800;font-size:16px;margin-bottom:12px}.gh-share-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}.gh-share-option{border:1px solid #e5d4b8;border-radius:10px;padding:12px 8px;background:#fff;color:#4a3323;font-weight:700;font-size:14px}#ghShareHint{font-size:12px;color:#78634e;margin-bottom:0}`;document.head.appendChild(style);
+  const el=document.createElement('div');el.id='ghShareSheet';el.innerHTML=`<section id="ghShareCard" role="dialog" aria-modal="true" aria-label="eBook शेयर करें"><button id="ghShareClose" type="button" aria-label="बंद करें">×</button><h3>✨ eBook शेयर करें</h3><p id="ghShareDesc">अपनी पसंद की किताब दोस्तों तक पहुँचाएँ।</p><label for="ghShareUrl" style="font-weight:700;font-size:13px">आपका शेयर लिंक</label><input id="ghShareUrl" type="text" readonly><button id="ghShareCopyMain" type="button">🔗 लिंक कॉपी करें</button><div class="gh-share-options"><button class="gh-share-option" type="button" data-share="wa">🟢 WhatsApp</button><button class="gh-share-option" type="button" data-share="fb">🔵 Facebook</button><button class="gh-share-option" type="button" data-share="inst">📸 Instagram</button></div><p id="ghShareHint">Instagram पर लिंक कॉपी करके Story या Bio में लगाएँ।</p></section>`;
   document.body.appendChild(el);
   el.addEventListener('click',e=>{if(e.target===el||e.target.id==='ghShareClose')el.classList.remove('open');});
   el.querySelectorAll('[data-share]').forEach(b=>b.addEventListener('click',()=>shareAction(b.dataset.share)));
+  document.getElementById('ghShareCopyMain').addEventListener('click',()=>copyLink(currentShare.url));
  }
  function getInfo(slug){
   const card=[...document.querySelectorAll('[data-share-slug]')].find(c=>c.dataset.shareSlug===slug);
   const title=card?.querySelector('h3')?.textContent||card?.dataset.shareTitle||'GyanHub eBook';
   const price=card?.querySelector('.price strong')?.textContent||'';
-  const desc=card?.querySelector('.rating')?.textContent||'GyanHub पर यह eBook पढ़ें।';
-  const isDynamic=!!card?.closest('#ghDynamicBooks');
-  let url=isDynamic?GH_SHARE_BASE+'?ebook='+encodeURIComponent(slug):GH_SHARE_BASE+'share-'+encodeURIComponent(slug)+'.html';
+  const desc=card?.dataset.shareDescription||card?.querySelector('.rating')?.textContent||'GyanHub पर यह eBook पढ़ें।';
+  // Query-string links always lead to the live store; no separate share-*.html file is required.
+  const url=GH_SHARE_BASE+'?ebook='+encodeURIComponent(slug);
   return {title,price,desc,url};
  }
  window.ghShareEbook=function(slug){
-  const info=getInfo(slug);currentShare={...info};
-  const fullText=`${info.title}\n${info.price}\n${info.desc}\nGyanHub पर अभी देखें: ${info.url}`;
-  ensureSheet();
-  const sheet=document.getElementById('ghShareSheet');
-  document.getElementById('ghShareDesc').textContent=`${info.title} ${info.price?('• '+info.price):''} — WhatsApp, Facebook या Instagram पर शेयर करें।`;
-  sheet.classList.add('open');
-  sheet.dataset.shareText=fullText;
+  const info=getInfo(slug);currentShare={...info};ensureSheet();
+  document.getElementById('ghShareDesc').textContent=`${info.title}${info.price?' • '+info.price:''} — WhatsApp, Facebook या Instagram पर शेयर करें।`;
+  document.getElementById('ghShareUrl').value=info.url;
+  document.getElementById('ghShareSheet').classList.add('open');
  };
  async function shareAction(type){
   const {url,title,price,desc}=currentShare;
   const msg=`${title}\n${price}\n${desc}\nGyanHub पर अभी देखें: ${url}`;
-  if(type==='wa'){window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank','noopener');return;}
+  if(type==='wa'){location.href='https://wa.me/?text='+encodeURIComponent(msg);return;}
   if(type==='fb'){window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(url),'_blank','noopener');return;}
   if(type==='inst'){await copyLink(url,'Instagram के लिए लिंक कॉपी हो गया। अब Instagram Story या Bio में लगाएँ।');return;}
-  await copyLink(url,'eBook का लिंक कॉपी हो गया। अब जहाँ चाहें शेयर करें।');
  }
- async function copyLink(url,success){
-  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(url);}else{const t=document.createElement('textarea');t.value=url;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}if(typeof toast==='function')toast(success);else alert(success);}
-  catch(e){prompt('लिंक कॉपी करें:',url);}
+ async function copyLink(url,success='लिंक कॉपी हो गया। अब जहाँ चाहें शेयर करें।'){
+  const field=document.getElementById('ghShareUrl');
+  try{
+   if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(url);}
+   else if(field){field.value=url;field.removeAttribute('readonly');field.select();field.setSelectionRange(0,field.value.length);const ok=document.execCommand('copy');field.setAttribute('readonly','');if(!ok)throw new Error('copy failed');}
+   else throw new Error('clipboard unavailable');
+   if(typeof toast==='function')toast(success);else alert(success);
+  }catch(e){if(field){field.value=url;field.removeAttribute('readonly');field.focus();field.select();field.setSelectionRange(0,url.length);alert('लिंक नीचे दिया है। उसे दबाकर Copy चुनें।');}else prompt('लिंक कॉपी करें:',url);}
  }
  const params=new URLSearchParams(location.search),slug=params.get('ebook');
- if(slug){document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{const card=[...document.querySelectorAll('[data-share-slug]')].find(c=>c.dataset.shareSlug===slug);if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.classList.add('gh-share-focus');}},1200));}
+ if(slug){let tries=0;const timer=setInterval(()=>{tries++;const card=[...document.querySelectorAll('[data-share-slug]')].find(c=>c.dataset.shareSlug===slug);if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.classList.add('gh-share-focus');clearInterval(timer);}if(tries>=30)clearInterval(timer);},500);}
 })();
 </script>
 </body></html>
