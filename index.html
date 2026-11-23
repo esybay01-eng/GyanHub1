@@ -612,58 +612,52 @@ function ghChatSend(){const input=document.getElementById('ghChatInput'),q=(inpu
 function ghChatToggle(){document.getElementById('ghChatPanel')?.classList.toggle('open');}
 document.addEventListener('DOMContentLoaded',()=>{ghApplyDemoImageOverrides();const root=document.createElement('div');root.innerHTML=`<button id="ghChatFab" type="button" aria-label="GyanHub chat सहायता" onclick="ghChatToggle()" title="Chat सहायता">☏</button><section id="ghChatPanel" aria-label="GyanHub chat"><div id="ghChatHead"><div>💬 GyanHub सहायता<small>Hindi / English · Auto reply</small></div><button type="button" onclick="ghChatToggle()" aria-label="Close chat" style="background:transparent;border:0;color:white;font-size:24px">×</button></div><div id="ghChatMsgs"><div class="gh-chat-msg gh-chat-bot">नमस्ते! GyanHub में आपका स्वागत है। / Hello! Welcome to GyanHub. मैं आपकी कैसे मदद कर सकता हूँ? / How can I help?</div></div><form id="ghChatForm" onsubmit="event.preventDefault();ghChatSend()"><input id="ghChatInput" placeholder="अपना सवाल लिखें / Type your question…" autocomplete="off"><button type="submit">भेजें / Send</button></form></section>`;document.body.appendChild(root);});
 </script>
-<script id="gh-share-script">
-const GH_SHARE_BASE="https://esybay01-eng.github.io/GyanHub1/";
-const GH_PREVIEW_BASE="https://ychpfbhyyexezspwwmco.supabase.co/functions/v1/ebook-preview";
-function ghShareEbook(slug){const url=GH_PREVIEW_BASE+'?slug='+encodeURIComponent(slug);const title=document.querySelector('[data-share-slug="'+CSS.escape(slug)+'"] h3')?.textContent||'GyanHub eBook';const text=title+' — GyanHub पर ₹149 में पढ़ें। '+url;if(navigator.share){navigator.share({title:title,text:text,url:url}).catch(()=>{});return;}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(()=>alert('eBook का शेयर लिंक कॉपी हो गया। अब WhatsApp या Facebook पर भेजें।')).catch(()=>prompt('इस लिंक को कॉपी करें:',url));}else{prompt('इस लिंक को कॉपी करें:',url);}}
-(function(){const p=new URLSearchParams(location.search);const slug=p.get('ebook');if(!slug)return;const card=document.querySelector('[data-share-slug="'+CSS.escape(slug)+'"]');if(card){setTimeout(()=>{card.scrollIntoView({behavior:'smooth',block:'center'});card.classList.add('gh-share-focus');},450);}})();
-</script>
-
-<script id="gh-share-pro-system">
+<script id="gh-share-system-final">
 (function(){
- let currentShare={url:'',title:'GyanHub eBook',price:'',desc:''};
+ const PREVIEW_BASE='https://ychpfbhyyexezspwwmco.supabase.co/functions/v1/ebook-preview';
+ let current={url:'',title:'GyanHub eBook',price:'',desc:''};
+ function cardFor(slug){return [...document.querySelectorAll('[data-share-slug]')].find(c=>c.dataset.shareSlug===String(slug));}
+ function getInfo(slug){
+  const card=cardFor(slug);
+  const title=card?.querySelector('h3')?.textContent?.trim()||card?.dataset.shareTitle||'GyanHub eBook';
+  const price=card?.querySelector('.price strong')?.textContent?.trim()||'';
+  const desc=card?.dataset.shareDescription||card?.querySelector('.rating')?.textContent?.trim()||'GyanHub पर यह eBook पढ़ें।';
+  // Social preview endpoint adds Open Graph cover/title/price metadata.
+  const url=PREVIEW_BASE+'?slug='+encodeURIComponent(String(slug));
+  return {url,title,price,desc};
+ }
  function ensureSheet(){
   if(document.getElementById('ghShareSheet'))return;
-  const style=document.createElement('style');style.id='ghShareStyle';style.textContent=`#ghShareSheet{display:none;position:fixed;inset:0;z-index:999999;background:rgba(20,12,8,.62);padding:18px;align-items:center;justify-content:center}#ghShareSheet.open{display:flex}#ghShareCard{position:relative;width:min(100%,440px);max-height:88vh;overflow:auto;background:#fffaf2;color:#392719;border:1px solid #e5c99b;border-radius:20px;padding:24px 18px 20px;box-shadow:0 18px 55px #0005;font-family:inherit}#ghShareCard h3{margin:4px 35px 10px 0;color:#8b2c19;font-size:22px}#ghShareCard p{line-height:1.5}#ghShareClose{position:absolute;right:12px;top:10px;border:0;border-radius:50%;width:36px;height:36px;background:#f3e5d0;font-size:25px;color:#553522}#ghShareUrl{width:100%;box-sizing:border-box;padding:12px;border:1px solid #d9c6a7;border-radius:10px;background:#fff;font-size:13px;color:#3c3025;margin:8px 0 12px}#ghShareCopyMain{width:100%;padding:13px;border:0;border-radius:11px;background:#8b241c;color:#fff;font-weight:800;font-size:16px;margin-bottom:12px}.gh-share-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}.gh-share-option{border:1px solid #e5d4b8;border-radius:10px;padding:12px 8px;background:#fff;color:#4a3323;font-weight:700;font-size:14px}#ghShareHint{font-size:12px;color:#78634e;margin-bottom:0}`;document.head.appendChild(style);
+  const style=document.createElement('style');style.id='ghShareStyleFinal';style.textContent=`#ghShareSheet{display:none;position:fixed;inset:0;z-index:999999;background:rgba(20,12,8,.62);padding:18px;align-items:center;justify-content:center}#ghShareSheet.open{display:flex}#ghShareCard{position:relative;width:min(100%,440px);max-height:88vh;overflow:auto;background:#fffaf2;color:#392719;border:1px solid #e5c99b;border-radius:20px;padding:24px 18px 20px;box-shadow:0 18px 55px #0005;font-family:inherit}#ghShareCard h3{margin:4px 35px 10px 0;color:#8b2c19;font-size:22px}#ghShareCard p{line-height:1.5}#ghShareClose{position:absolute;right:12px;top:10px;border:0;border-radius:50%;width:36px;height:36px;background:#f3e5d0;font-size:25px;color:#553522}#ghShareUrl{width:100%;box-sizing:border-box;padding:12px;border:1px solid #d9c6a7;border-radius:10px;background:#fff;font-size:13px;color:#3c3025;margin:8px 0 12px}#ghShareCopyMain{width:100%;padding:13px;border:0;border-radius:11px;background:#8b241c;color:#fff;font-weight:800;font-size:16px;margin-bottom:12px}.gh-share-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}.gh-share-option{border:1px solid #e5d4b8;border-radius:10px;padding:12px 8px;background:#fff;color:#4a3323;font-weight:700;font-size:14px}#ghShareHint{font-size:12px;color:#78634e;margin-bottom:0}`;
+  document.head.appendChild(style);
   const el=document.createElement('div');el.id='ghShareSheet';el.innerHTML=`<section id="ghShareCard" role="dialog" aria-modal="true" aria-label="eBook शेयर करें"><button id="ghShareClose" type="button" aria-label="बंद करें">×</button><h3>✨ eBook शेयर करें</h3><p id="ghShareDesc">अपनी पसंद की किताब दोस्तों तक पहुँचाएँ।</p><label for="ghShareUrl" style="font-weight:700;font-size:13px">आपका शेयर लिंक</label><input id="ghShareUrl" type="text" readonly><button id="ghShareCopyMain" type="button">🔗 लिंक कॉपी करें</button><div class="gh-share-options"><button class="gh-share-option" type="button" data-share="wa">🟢 WhatsApp</button><button class="gh-share-option" type="button" data-share="fb">🔵 Facebook</button><button class="gh-share-option" type="button" data-share="inst">📸 Instagram</button></div><p id="ghShareHint">Instagram पर लिंक कॉपी करके Story या Bio में लगाएँ।</p></section>`;
   document.body.appendChild(el);
   el.addEventListener('click',e=>{if(e.target===el||e.target.id==='ghShareClose')el.classList.remove('open');});
   el.querySelectorAll('[data-share]').forEach(b=>b.addEventListener('click',()=>shareAction(b.dataset.share)));
-  document.getElementById('ghShareCopyMain').addEventListener('click',()=>copyLink(currentShare.url));
+  document.getElementById('ghShareCopyMain').addEventListener('click',()=>copyLink(current.url));
  }
- function getInfo(slug){
-  const card=[...document.querySelectorAll('[data-share-slug]')].find(c=>c.dataset.shareSlug===slug);
-  const title=card?.querySelector('h3')?.textContent||card?.dataset.shareTitle||'GyanHub eBook';
-  const price=card?.querySelector('.price strong')?.textContent||'';
-  const desc=card?.dataset.shareDescription||card?.querySelector('.rating')?.textContent||'GyanHub पर यह eBook पढ़ें।';
-  // Query-string links always lead to the live store; no separate share-*.html file is required.
-  const url=GH_SHARE_BASE+'?ebook='+encodeURIComponent(slug);
-  return {title,price,desc,url};
+ async function copyLink(url){
+  const field=document.getElementById('ghShareUrl');
+  try{if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(url);else{field.value=url;field.removeAttribute('readonly');field.select();field.setSelectionRange(0,url.length);if(!document.execCommand('copy'))throw new Error('copy failed');field.setAttribute('readonly','');}
+   if(typeof toast==='function')toast('ईबुक का Preview लिंक कॉपी हो गया।');else alert('ईबुक का Preview लिंक कॉपी हो गया।');
+  }catch(e){field.value=url;field.removeAttribute('readonly');field.focus();field.select();field.setSelectionRange(0,url.length);alert('लिंक चुनकर Copy करें।');}
  }
- window.ghShareEbook=function(slug){
-  const info=getInfo(slug);currentShare={...info};ensureSheet();
-  document.getElementById('ghShareDesc').textContent=`${info.title}${info.price?' • '+info.price:''} — WhatsApp, Facebook या Instagram पर शेयर करें।`;
-  document.getElementById('ghShareUrl').value=info.url;
-  document.getElementById('ghShareSheet').classList.add('open');
- };
  async function shareAction(type){
-  const {url,title,price,desc}=currentShare;
+  const {url,title,price,desc}=current;
   const msg=`${title}\n${price}\n${desc}\nGyanHub पर अभी देखें: ${url}`;
   if(type==='wa'){location.href='https://wa.me/?text='+encodeURIComponent(msg);return;}
   if(type==='fb'){window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(url),'_blank','noopener');return;}
-  if(type==='inst'){await copyLink(url,'Instagram के लिए लिंक कॉपी हो गया। अब Instagram Story या Bio में लगाएँ।');return;}
+  if(type==='inst'){await copyLink(url);return;}
  }
- async function copyLink(url,success='लिंक कॉपी हो गया। अब जहाँ चाहें शेयर करें।'){
-  const field=document.getElementById('ghShareUrl');
-  try{
-   if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(url);}
-   else if(field){field.value=url;field.removeAttribute('readonly');field.select();field.setSelectionRange(0,field.value.length);const ok=document.execCommand('copy');field.setAttribute('readonly','');if(!ok)throw new Error('copy failed');}
-   else throw new Error('clipboard unavailable');
-   if(typeof toast==='function')toast(success);else alert(success);
-  }catch(e){if(field){field.value=url;field.removeAttribute('readonly');field.focus();field.select();field.setSelectionRange(0,url.length);alert('लिंक नीचे दिया है। उसे दबाकर Copy चुनें।');}else prompt('लिंक कॉपी करें:',url);}
- }
- const params=new URLSearchParams(location.search),slug=params.get('ebook');
- if(slug){let tries=0;const timer=setInterval(()=>{tries++;const card=[...document.querySelectorAll('[data-share-slug]')].find(c=>c.dataset.shareSlug===slug);if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.classList.add('gh-share-focus');clearInterval(timer);}if(tries>=30)clearInterval(timer);},500);}
+ window.ghShareEbook=function(slug){
+  current=getInfo(slug);ensureSheet();
+  document.getElementById('ghShareDesc').textContent=`${current.title}${current.price?' • '+current.price:''} — WhatsApp, Facebook या Instagram पर शेयर करें।`;
+  document.getElementById('ghShareUrl').value=current.url;
+  document.getElementById('ghShareSheet').classList.add('open');
+ };
+ // A preview link opens the store and automatically locates the matching active ebook card.
+ const target=new URLSearchParams(location.search).get('ebook');
+ if(target){let tries=0;const timer=setInterval(()=>{tries++;const card=cardFor(target);if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.classList.add('gh-share-focus');clearInterval(timer);}if(tries>=40)clearInterval(timer);},500);}
 })();
 </script>
 </body></html>
